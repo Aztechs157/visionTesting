@@ -47,12 +47,12 @@ public class processVision extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        target cargo = Robot.vision.pixy.read();
+        target[] cargo = Robot.vision.pixy.read();
         if (cargo != null)
         {
-            if (cargo.found)
+            if (cargo[0] != null)
             {
-                double turn = Robot.drive.turnPid.pidCalculate(158, cargo.x);
+                double turn = Robot.drive.turnPid.pidCalculate(158, cargo[0].x);
                 Robot.drive.tankDrive(0, turn);
             }
         }
