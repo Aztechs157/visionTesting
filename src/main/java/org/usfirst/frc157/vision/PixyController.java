@@ -31,9 +31,10 @@ public class PixyController extends Thread {
     }
     public void run()
     {
+        byte[] dump = new byte[10];
         try
         {
-            byte[] targetBytes = new byte[10];
+            byte[] targetBytes = new byte[12];
             int w, lastw;
             lastw = 0xffff;
             while (!Thread.interrupted())
@@ -42,25 +43,22 @@ public class PixyController extends Thread {
                 w = convertToShort(this.buffer[0], this.buffer[1]);
                 if (w == 0xaa55 && lastw == 0xaa55)
                 {
+                    
+                    this.cam.readOnly(targetBytes, 12);
                     this.targets = new target[this.signatures];
                     //read frame
-                    do {
-                    this.cam.readOnly(targetBytes, 10);
                     target temp = new target();
-                    temp.sig = convertToShort(targetBytes[0], targetBytes[1]);
-                    temp.x = convertToShort(targetBytes[2], targetBytes[3]);
-                    temp.y = convertToShort(targetBytes[4], targetBytes[5]);
-                    temp.width = convertToShort(targetBytes[6], targetBytes[7]);
-                    temp.height = convertToShort(targetBytes[8], targetBytes[9]);
-                    synchronized(targets){this.targets[temp.sig-1] = temp;}
-                    this.cam.readOnly(this.buffer, 2);
-                    w = convertToShort(this.buffer[0], this.buffer[1]);
-                    } while (w == 0xaa55);
+                    temp.sig = convertToShort(targetBytes[2], targetBytes[3]);
+                    temp.x = convertToShort(targetBytes[4], targetBytes[5]);
+                    temp.y = convertToShort(targetBytes[6], targetBytes[7]);
+                    temp.width = convertToShort(targetBytes[8], targetBytes[9]);
+                    temp.height = convertToShort(targetBytes[10], targetBytes[11]);
+                    synchronized(targets){this.targets[0] = temp;}
 
                 }
                 else if (w == 0x55aa)
                 {
-                    this.cam.readOnly(new byte[1], 1);
+                    this.cam.readOnly(dump, 1);
                 }
                 else if (w == 0 && lastw == 0)
                 {
