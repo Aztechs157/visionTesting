@@ -39,11 +39,10 @@ public class PixyController extends Thread {
             lastw = 0xffff;
             while (!Thread.interrupted())
             {
-                this.cam.readOnly(this.buffer, 2);
+                boolean testing = this.cam.readOnly(this.buffer, 2);
                 w = convertToShort(this.buffer[0], this.buffer[1]);
                 if (w == 0xaa55 && lastw == 0xaa55)
                 {
-                    
                     this.cam.readOnly(targetBytes, 12);
                     this.targets = new target[this.signatures];
                     //read frame
@@ -54,7 +53,8 @@ public class PixyController extends Thread {
                     temp.width = convertToShort(targetBytes[8], targetBytes[9]);
                     temp.height = convertToShort(targetBytes[10], targetBytes[11]);
                     synchronized(targets){this.targets[0] = temp;}
-
+                    w = 0;
+                    lastw = 0;
                 }
                 else if (w == 0x55aa)
                 {
