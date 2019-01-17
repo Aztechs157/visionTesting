@@ -6,6 +6,9 @@
 /*----------------------------------------------------------------------------*/
 
 package org.usfirst.frc157.vision;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.I2C.Port;
 
@@ -17,12 +20,69 @@ public class PixyController extends Thread {
     byte[] buffer;
     int signatures;
     int START = 43605; //0xaa55
+    ArrayList<target> targets = new ArrayList<target>();
+    
 
     public PixyController(Port port, int address, int signatures)
     {
-        this.buffer = new byte[signatures * 30];
+        this.buffer = new byte[2];
         this.cam = new I2C(port, address);
         this.signatures = signatures;
+        this.targets = new ArrayList<target>();
+    }
+    public void run()
+    {
+        byte[] dump = new byte[10];
+        try
+        {
+            byte[] targetBytes = new byte[12];
+            int w, lastw;
+            lastw = 0xffff;
+            while (!Thread.interrupted())
+            {
+                boolean testing = this.cam.readOnly(this.buffer, 2);
+                w = convertToShort(this.buffer[0], this.buffer[1]);
+                if (w == 0xaa55 && lastw == 0xaa55)
+                {
+                    lastw = 0;
+                    this.targets = new ArrayList<target>();
+                    do {
+                        this.cam.readOnly(targetBytes, 12);
+                        //read frame
+                        target temp = new target();
+                        temp.checkSum = convertToShort(targetBytes[0], targetBytes[1]);
+                        temp.sig = convertToShort(targetBytes[2], targetBytes[3]);
+                        temp.x = convertToShort(targetBytes[4], targetBytes[5]);
+                        temp.y = convertToShort(targetBytes[6], targetBytes[7]);
+                        temp.width = convertToShort(targetBytes[8], targetBytes[9]);
+                        temp.height = convertToShort(targetBytes[10], targetBytes[11]);
+                        int testVal = (int)(temp.sig + temp.x +temp.y + temp.width + temp.height);
+                        testVal = testVal % (0xffff+1);
+                        temp.checkCorrect = (testVal == temp.checkSum);
+                        if (temp.checkCorrect)
+                        {
+                        synchronized(targets){this.targets.add(temp);}
+                        }
+                        testing = this.cam.readOnly(this.buffer, 2);
+                        w = convertToShort(this.buffer[0], this.buffer[1]);
+                    }while (w == 0xaa55);
+                }
+                else if (w == 0x55aa)
+                {
+                    this.cam.readOnly(dump, 1);
+                }
+                else if (w == 0 && lastw == 0)
+                {
+                    TimeUnit.MICROSECONDS.sleep(10);
+                }
+                lastw = w;
+                
+            }
+        }
+        catch(InterruptedException ie)
+        {
+            Thread.currentThread().interrupt();
+        }
     }
     public int unsign(byte n)
     {
@@ -32,65 +92,31 @@ public class PixyController extends Thread {
     {
         return (unsign(b)<<8)|unsign(a);
     }
-    public target read()
+    public ArrayList<target> read(int signature)
     {
-        target retval = new target(); 
-        this.cam.readOnly(this.buffer, this.buffer.length);
-        boolean foundFirst = false;
-        int previous = 0;
-        boolean running = true;
-        int i = 0;
-        while (running)
+        ArrayList<target> retval = new ArrayList<target>();
+        ArrayList<target> targetsStored = this.targets;
+        for (int i = 0; i < targetsStored.size()-1; i++)
         {
-            if (i > this.buffer.length-4)
+            if (targetsStored.get(i).sig == signature)
             {
-                retval.found = false;
-                running = false;
-                return null;
-            }
-            else if (foundFirst)
-            {
-                if (i+9 > this.buffer.length-1)
-                {
-                    retval.found = false;
-                    return null;
-                }
-                else
-                {
-                    retval.sig = convertToShort(this.buffer[i+0], this.buffer[i+1]);
-                    retval.x = convertToShort(this.buffer[i+2], this.buffer[i+3]);
-                    retval.y = convertToShort(this.buffer[i+4], this.buffer[i+5]);
-                    retval.width = convertToShort(this.buffer[i+6], this.buffer[i+7]);
-                    retval.height = convertToShort(this.buffer[i+8], this.buffer[i+9]);
-                    retval.found = true;
-                }
-                running = false;
-            }
-            else
-            {
-                int word = convertToShort(this.buffer[i], this.buffer[i+1]);
-                if (word == 0xaa55 && word == previous)
-                {
-                    foundFirst = true;
-                    i += 4;
-                }
-                else
-                {
-                    i += 2;
-                }
-                previous = word;
+                retval.add(targetsStored.get(i));
             }
         }
         return retval;
-
+    }
+    public ArrayList<target> readAll()
+    {
+        return targets;
     }
     public class target{
-        public boolean found;
         public double x;
         public double y;
-        public double sig;
+        public int sig;
         public double width;
         public double height;
+        public double checkSum;
+        public boolean checkCorrect;
     }
 }
 
