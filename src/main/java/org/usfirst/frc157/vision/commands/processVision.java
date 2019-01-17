@@ -50,7 +50,7 @@ public class processVision extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        ArrayList<target> cargo = Robot.vision.pixy.readAll();
+        ArrayList<target> cargo = Robot.vision.pixy.read(1);
         if (cargo.size() >0)
         {
             if (cargo.get(0) != null)
@@ -58,10 +58,6 @@ public class processVision extends Command {
                 double turn = Robot.drive.turnPid.pidCalculate(158, cargo.get(0).x);
                 Robot.drive.tankDrive(0, turn);
             }
-        }
-        else
-        {
-            System.out.println("out of sync");
         }
     }
 

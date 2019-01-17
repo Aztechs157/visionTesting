@@ -96,7 +96,7 @@ public class PixyController extends Thread {
     {
         ArrayList<target> retval = new ArrayList<target>();
         ArrayList<target> targetsStored = this.targets;
-        for (int i = 0; i < targetsStored.size()-1; i++)
+        for (int i = 0; i < targetsStored.size(); i++)
         {
             if (targetsStored.get(i).sig == signature)
             {
