@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 package org.usfirst.frc157.vision;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import edu.wpi.first.wpilibj.I2C;
@@ -19,7 +20,7 @@ public class PixyController extends Thread {
     byte[] buffer;
     int signatures;
     int START = 43605; //0xaa55
-    target[] targets;
+    ArrayList<target> targets = new ArrayList<target>();
     
 
     public PixyController(Port port, int address, int signatures)
@@ -27,7 +28,7 @@ public class PixyController extends Thread {
         this.buffer = new byte[2];
         this.cam = new I2C(port, address);
         this.signatures = signatures;
-        this.targets = new target[signatures];
+        this.targets = new ArrayList<target>();
     }
     public void run()
     {
@@ -39,22 +40,32 @@ public class PixyController extends Thread {
             lastw = 0xffff;
             while (!Thread.interrupted())
             {
-                this.cam.readOnly(this.buffer, 2);
+                boolean testing = this.cam.readOnly(this.buffer, 2);
                 w = convertToShort(this.buffer[0], this.buffer[1]);
                 if (w == 0xaa55 && lastw == 0xaa55)
                 {
-                    
-                    this.cam.readOnly(targetBytes, 12);
-                    this.targets = new target[this.signatures];
-                    //read frame
-                    target temp = new target();
-                    temp.sig = convertToShort(targetBytes[2], targetBytes[3]);
-                    temp.x = convertToShort(targetBytes[4], targetBytes[5]);
-                    temp.y = convertToShort(targetBytes[6], targetBytes[7]);
-                    temp.width = convertToShort(targetBytes[8], targetBytes[9]);
-                    temp.height = convertToShort(targetBytes[10], targetBytes[11]);
-                    synchronized(targets){this.targets[0] = temp;}
-
+                    lastw = 0;
+                    this.targets = new ArrayList<target>();
+                    do {
+                        this.cam.readOnly(targetBytes, 12);
+                        //read frame
+                        target temp = new target();
+                        temp.checkSum = convertToShort(targetBytes[0], targetBytes[1]);
+                        temp.sig = convertToShort(targetBytes[2], targetBytes[3]);
+                        temp.x = convertToShort(targetBytes[4], targetBytes[5]);
+                        temp.y = convertToShort(targetBytes[6], targetBytes[7]);
+                        temp.width = convertToShort(targetBytes[8], targetBytes[9]);
+                        temp.height = convertToShort(targetBytes[10], targetBytes[11]);
+                        int testVal = (int)(temp.sig + temp.x +temp.y + temp.width + temp.height);
+                        testVal = testVal % (0xffff+1);
+                        temp.checkCorrect = (testVal == temp.checkSum);
+                        if (temp.checkCorrect)
+                        {
+                        synchronized(targets){this.targets.add(temp);}
+                        }
+                        testing = this.cam.readOnly(this.buffer, 2);
+                        w = convertToShort(this.buffer[0], this.buffer[1]);
+                    }while (w == 0xaa55);
                 }
                 else if (w == 0x55aa)
                 {
@@ -81,10 +92,22 @@ public class PixyController extends Thread {
     {
         return (unsign(b)<<8)|unsign(a);
     }
-    public target[] read()
+    public ArrayList<target> read(int signature)
     {
-        return this.targets;
-
+        ArrayList<target> retval = new ArrayList<target>();
+        ArrayList<target> targetsStored = this.targets;
+        for (int i = 0; i < targetsStored.size()-1; i++)
+        {
+            if (targetsStored.get(i).sig == signature)
+            {
+                retval.add(targetsStored.get(i));
+            }
+        }
+        return retval;
+    }
+    public ArrayList<target> readAll()
+    {
+        return targets;
     }
     public class target{
         public double x;
@@ -92,7 +115,8 @@ public class PixyController extends Thread {
         public int sig;
         public double width;
         public double height;
-
+        public double checkSum;
+        public boolean checkCorrect;
     }
 }
 

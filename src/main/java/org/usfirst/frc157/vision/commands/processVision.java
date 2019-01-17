@@ -13,6 +13,9 @@ package org.usfirst.frc157.vision.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc157.vision.Robot;
 import org.usfirst.frc157.vision.PixyController.target;
+
+import java.util.ArrayList;
+
 import org.usfirst.frc157.vision.PixyController;;
 
 
@@ -47,12 +50,12 @@ public class processVision extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        target[] cargo = Robot.vision.pixy.read();
-        if (cargo != null)
+        ArrayList<target> cargo = Robot.vision.pixy.readAll();
+        if (cargo.size() >0)
         {
-            if (cargo[0] != null)
+            if (cargo.get(0) != null)
             {
-                double turn = Robot.drive.turnPid.pidCalculate(158, cargo[0].x);
+                double turn = Robot.drive.turnPid.pidCalculate(158, cargo.get(0).x);
                 Robot.drive.tankDrive(0, turn);
             }
         }
