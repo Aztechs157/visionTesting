@@ -24,7 +24,9 @@ public class Drive extends Subsystem {
   private TalonSRX driveRight2 = RobotMap.driveRight2;
   private TalonSRX driveleft1 = RobotMap.driveleft1;
   private TalonSRX driveleft2 = RobotMap.driveleft2;
-  public PID turnPid = new PID(0.005, 0, 0.0000003, 9999999, 9999999, 9999999, 999999);
+  public PID turnPID = new PID(0.005, 0, 0.0000003, 9999999, 9999999, 9999999, 999999);
+  public PID drivePID = new PID(0.005, 0, 0.0000003, 9999999, 9999999, 9999999, 999999);
+
   @Override
   public void initDefaultCommand() {
     // Set the default command for a subsystem here.
