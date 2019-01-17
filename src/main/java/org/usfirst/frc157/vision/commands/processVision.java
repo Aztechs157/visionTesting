@@ -55,8 +55,8 @@ public class processVision extends Command {
         {
             if (cargo.get(0) != null)
             {
-                double forward = Robot.drive.drivePID.pidCalculate(176, (cargo.width+cargo.height)/2);
-                double turn = Robot.drive.turnPID.pidCalculate(158, cargo.x);
+                double forward = Robot.drive.drivePID.pidCalculate(176, (cargo.get(0).width+cargo.get(0).height)/2);
+                double turn = Robot.drive.turnPID.pidCalculate(158, cargo.get(0).x);
                 Robot.drive.tankDrive(forward, turn);
             }
         }
