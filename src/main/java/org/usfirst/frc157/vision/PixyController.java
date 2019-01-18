@@ -94,16 +94,26 @@ public class PixyController extends Thread {
     }
     public ArrayList<target> read(int signature)
     {
-        ArrayList<target> retval = new ArrayList<target>();
-        ArrayList<target> targetsStored = this.targets;
-        for (int i = 0; i < targetsStored.size(); i++)
+        synchronized(this.targets)
         {
-            if (targetsStored.get(i).sig == signature)
+            ArrayList<target> retval = new ArrayList<target>();
+            ArrayList<target> targetsStored = this.targets;
+            ArrayList<Integer> deleted = new ArrayList<Integer>();
+            for (int i = 0; i < targetsStored.size(); i++)
             {
-                retval.add(targetsStored.get(i));
+                if (targetsStored.get(i).sig == signature && targetsStored.get(i).unread)
+                {
+                    retval.add(targetsStored.get(i)); 
+                    deleted.add(i);
+                }
             }
+            for (int i = 0; i < deleted.size(); i++)
+            {
+                this.targets.remove(deleted.get(i));
+            }
+
+            return retval;
         }
-        return retval;
     }
     public ArrayList<target> readAll()
     {
@@ -117,6 +127,7 @@ public class PixyController extends Thread {
         public double height;
         public double checkSum;
         public boolean checkCorrect;
+        public boolean unread = true;
     }
 }
 
