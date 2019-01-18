@@ -11,6 +11,9 @@ import java.util.concurrent.TimeUnit;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.I2C.Port;
+import org.usfirst.frc157.vision.Target;
+
+
 
 /**
  * without this comment there are 20 new errors
@@ -20,7 +23,7 @@ public class PixyController extends Thread {
     byte[] buffer;
     int signatures;
     int START = 43605; //0xaa55
-    ArrayList<target> targets = new ArrayList<target>();
+    ArrayList<Target> targets = new ArrayList<Target>();
     
 
     public PixyController(Port port, int address, int signatures)
@@ -28,7 +31,7 @@ public class PixyController extends Thread {
         this.buffer = new byte[2];
         this.cam = new I2C(port, address);
         this.signatures = signatures;
-        this.targets = new ArrayList<target>();
+        this.targets = new ArrayList<Target>();
     }
     public void run()
     {
@@ -45,11 +48,11 @@ public class PixyController extends Thread {
                 if (w == 0xaa55 && lastw == 0xaa55)
                 {
                     lastw = 0;
-                    this.targets = new ArrayList<target>();
+                    this.targets = new ArrayList<Target>();
                     do {
                         this.cam.readOnly(targetBytes, 12);
                         //read frame
-                        target temp = new target();
+                        Target temp = new Target();
                         temp.checkSum = convertToShort(targetBytes[0], targetBytes[1]);
                         temp.sig = convertToShort(targetBytes[2], targetBytes[3]);
                         temp.x = convertToShort(targetBytes[4], targetBytes[5]);
@@ -92,12 +95,12 @@ public class PixyController extends Thread {
     {
         return (unsign(b)<<8)|unsign(a);
     }
-    public ArrayList<target> read(int signature)
+    public ArrayList<Target> read(int signature)
     {
         synchronized(this.targets)
         {
-            ArrayList<target> retval = new ArrayList<target>();
-            ArrayList<target> targetsStored = this.targets;
+            ArrayList<Target> retval = new ArrayList<Target>();
+            ArrayList<Target> targetsStored = this.targets;
             ArrayList<Integer> deleted = new ArrayList<Integer>();
             for (int i = 0; i < targetsStored.size(); i++)
             {
@@ -115,19 +118,9 @@ public class PixyController extends Thread {
             return retval;
         }
     }
-    public ArrayList<target> readAll()
+    public ArrayList<Target> readAll()
     {
         return targets;
-    }
-    public class target{
-        public double x;
-        public double y;
-        public int sig;
-        public double width;
-        public double height;
-        public double checkSum;
-        public boolean checkCorrect;
-        public boolean unread = true;
     }
 }
 
