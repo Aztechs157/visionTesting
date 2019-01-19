@@ -50,7 +50,7 @@ public class processVision extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        ArrayList<target> cargo = Robot.vision.pixy.read(1);
+        ArrayList<target> cargo = Robot.vision.pixy.read(2);
         if (cargo.size() >0)
         {
             if (cargo.get(0) != null)
