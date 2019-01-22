@@ -12,11 +12,12 @@
 package org.usfirst.frc157.vision.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc157.vision.Robot;
-import org.usfirst.frc157.vision.PixyController.target;
+import org.usfirst.frc157.vision.Target;
+
 
 import java.util.ArrayList;
 
-import org.usfirst.frc157.vision.PixyController;;
+import org.usfirst.frc157.vision.PixyController;
 
 
 /**
@@ -50,15 +51,83 @@ public class processVision extends Command {
     // Called repeatedly when this Command is scheduled to run
     @Override
     protected void execute() {
-        ArrayList<target> cargo = Robot.vision.pixy.read(2);
-        if (cargo.size() >0)
+        //executeOld();
+        executeNew();
+    }
+    protected void executeOld() {
+        ArrayList<Target> cargo = Robot.vision.pixy.read(1);
+        if (cargo.size() > 0)
         {
             if (cargo.get(0) != null)
             {
-                double forward = Robot.drive.drivePID.pidCalculate(176, (cargo.get(0).width+cargo.get(0).height)/2);
+                double forward = Robot.drive.drivePID.pidCalculate(176, (cargo.get(0).width+cargo.get(0).height)/2); //176 for cargo, 144 for
                 double turn = Robot.drive.turnPID.pidCalculate(158, cargo.get(0).x);
                 Robot.drive.tankDrive(forward, turn);
             }
+        
+        }
+        else {
+            Robot.drive.tankDrive(0,0);
+        }
+    }
+    protected void executeNew() {
+        ArrayList<Target> cargo = Robot.vision.pixy.read(2);
+
+        
+        if (cargo.size() > 0)
+        {
+            for (int i = 0; i<cargo.size(); i++) {
+                Target curTarget = cargo.get(i);
+                if (curTarget.width>1.5*curTarget.height) {
+                    Target newLeft = new Target();
+                    newLeft.x = curTarget.x-curTarget.width/2+curTarget.height/2;
+                    newLeft.y = curTarget.y;
+                    newLeft.width = curTarget.height;
+                    newLeft.height = curTarget.height;
+                    newLeft.sig = curTarget.sig;
+                    newLeft.checkSum = curTarget.checkSum;
+                    newLeft.checkCorrect = curTarget.checkCorrect;
+                    newLeft.unread = curTarget.unread;
+
+                    Target newRight = new Target();
+                    newRight.x = curTarget.x+curTarget.width/2-curTarget.height/2;
+                    newRight.y = curTarget.y;
+                    newRight.width = curTarget.height;
+                    newRight.height = curTarget.height;
+                    newRight.sig = curTarget.sig;
+                    newRight.checkSum = curTarget.checkSum;
+                    newRight.checkCorrect = curTarget.checkCorrect;
+                    newRight.unread = curTarget.unread;
+
+                    cargo.remove(i);
+                    cargo.add(i, newLeft);
+                    cargo.add(i, newRight);
+                    i++;
+                }
+            }
+
+            int targetIndex = 0;
+            
+            double lowestX = 100000;
+
+            double largestHeight = 0;
+
+
+            for (int i =0; i< cargo.size(); i++) {
+                Target curTarget = cargo.get(i);
+                if (Math.abs(curTarget.x-160)<Math.abs(lowestX-160)) {
+                    lowestX= curTarget.x;
+                    targetIndex = i;
+                }
+            }
+            double forward = Robot.drive.drivePID.pidCalculate(170, (cargo.get(targetIndex).width+cargo.get(targetIndex).height)/2); //176 for cargo
+            double turn = Robot.drive.turnPID.pidCalculate(158, cargo.get(targetIndex).x);
+            
+            Robot.drive.tankDrive(forward, turn);
+        
+        }
+        else {
+            Robot.drive.tankDrive(0,0);
         }
     }
 
