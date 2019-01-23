@@ -7,7 +7,10 @@
 
 package org.usfirst.frc157.vision.commands;
 
+import org.usfirst.frc157.vision.Robot;
+
 import edu.wpi.first.wpilibj.command.Command;
+
 
 public class driveController extends Command {
   public driveController() {
@@ -23,6 +26,10 @@ public class driveController extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+        double x = Robot.oi.joystick1.getRawAxis(5);
+        double y = Robot.oi.joystick1.getRawAxis(0);
+        double z = Robot.oi.joystick1.getRawAxis(4);
+        Robot.drive.driveSystem.driveCartesian(-y, -x, z);
   }
 
   // Make this return true when this Command no longer needs to run execute()

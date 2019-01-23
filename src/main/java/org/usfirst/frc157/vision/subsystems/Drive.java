@@ -9,23 +9,26 @@ package org.usfirst.frc157.vision.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANSparkMax;
 
 import org.usfirst.frc157.vision.PID;
 import org.usfirst.frc157.vision.RobotMap;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.drive.MecanumDrive;
 /**
  * Add your docs here.
  */
 public class Drive extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
-  private TalonSRX driveRight1 = RobotMap.driveRight1;
-  private TalonSRX driveRight2 = RobotMap.driveRight2;
-  private TalonSRX driveleft1 = RobotMap.driveleft1;
-  private TalonSRX driveleft2 = RobotMap.driveleft2;
+  private CANSparkMax driveRight1 = RobotMap.driveRight1;
+  private CANSparkMax driveRight2 = RobotMap.driveRight2;
+  private CANSparkMax driveleft1 = RobotMap.driveLeft1;
+  private CANSparkMax driveleft2 = RobotMap.driveLeft2;
   public PID turnPID = new PID(0.005, 0, 0.0000003, 9999999, 9999999, 9999999, 999999);
   public PID drivePID = new PID(0.005, 0, 0.0000003, 9999999, 9999999, 9999999, 999999);
+  public MecanumDrive driveSystem;
 
   @Override
   public void initDefaultCommand() {
@@ -36,9 +39,10 @@ public class Drive extends Subsystem {
   {
     double right = speed + turn;
     double left = speed - turn;
-    driveRight1.set(ControlMode.PercentOutput, right);
-    driveRight2.set(ControlMode.PercentOutput, right);
-    driveleft1.set(ControlMode.PercentOutput, left);
-    driveleft2.set(ControlMode.PercentOutput, left);
+    driveRight1.set(right);
+    driveRight2.set(right);
+    driveleft1.set(left);
+    driveleft2.set(left);
   }
+
 }
