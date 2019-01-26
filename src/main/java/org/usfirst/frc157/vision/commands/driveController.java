@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.command.Command;
 
 public class driveController extends Command {
   public driveController() {
+    requires(Robot.drive);
     // Use requires() here to declare subsystem dependencies
     // eg. requires(chassis);
   }
@@ -26,10 +27,10 @@ public class driveController extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-        double x = Robot.oi.joystick1.getRawAxis(5);
-        double y = Robot.oi.joystick1.getRawAxis(0);
-        double z = Robot.oi.joystick1.getRawAxis(4);
-        Robot.drive.driveSystem.driveCartesian(-y, -x, z);
+        double forward = Robot.oi.joystick1.getRawAxis(1);
+        double turn = Robot.oi.joystick1.getRawAxis(4);
+        double strafe = Robot.oi.joystick1.getRawAxis(0);
+        Robot.drive.mechDrive(forward, turn, strafe);
   }
 
   // Make this return true when this Command no longer needs to run execute()

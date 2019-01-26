@@ -46,6 +46,7 @@ public class processVision extends Command {
     // Called just before this Command runs the first time
     @Override
     protected void initialize() {
+        System.out.println("Process Vision Initialized");
     }
 
     // Called repeatedly when this Command is scheduled to run
@@ -63,6 +64,7 @@ public class processVision extends Command {
                 double forward = Robot.drive.drivePID.pidCalculate(176, (cargo.get(0).width+cargo.get(0).height)/2); //176 for cargo, 144 for
                 double turn = Robot.drive.turnPID.pidCalculate(158, cargo.get(0).x);
                 Robot.drive.tankDrive(forward, turn);
+                
             }
         
         }
@@ -71,9 +73,9 @@ public class processVision extends Command {
         }
     }
     protected void executeNew() {
-        ArrayList<Target> cargo = Robot.vision.pixy.read(2);
+        ArrayList<Target> cargo = Robot.vision.pixy.read(1);
 
-        
+      //  System.out.println("Execute");
         if (cargo.size() > 0)
         {
             for (int i = 0; i<cargo.size(); i++) {
@@ -120,11 +122,11 @@ public class processVision extends Command {
                     targetIndex = i;
                 }
             }
-            double forward = Robot.drive.drivePID.pidCalculate(170, (cargo.get(targetIndex).width+cargo.get(targetIndex).height)/2); //176 for cargo
+            double forward = Robot.drive.drivePID.pidCalculate(190, (cargo.get(targetIndex).width+cargo.get(targetIndex).height)/2); //176 for cargo
             double turn = Robot.drive.turnPID.pidCalculate(158, cargo.get(targetIndex).x);
             
             Robot.drive.tankDrive(forward, turn);
-        
+           // System.out.println("Forward: "+ forward);
         }
         else {
             Robot.drive.tankDrive(0,0);
@@ -134,6 +136,10 @@ public class processVision extends Command {
     // Make this return true when this Command no longer needs to run execute()
     @Override
     protected boolean isFinished() {
+        if (Math.abs(Robot.oi.joystick1.getRawAxis(1) + Robot.oi.joystick1.getRawAxis(0) + Robot.oi.joystick1.getRawAxis(4)) > 0.2) {
+            Robot.drive.tankDrive(0, 0);
+            return true;
+        }
         return false;
     }
 
